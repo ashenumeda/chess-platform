@@ -1,10 +1,49 @@
 # System Design
 
-## 1. Overview
-This document describes the design and architecture of the
-Online Chess Platform.
+## Table of Contents
+- [Overview](#1-overview)
+- [Use Case Diagram](#2-use-case-diagram)
+- [Component Diagram](#3-component-diagram)
+- [Entity Relationship Diagram](#4-entity-relationship-diagram)
 
-## Use Case Diagram
-The use case diagram illustrates the interactions between users and the
-Online Chess Platform, including authentication, invitation-based game
-creation, and gameplay actions.
+## 1. Overview
+This document describes the design and architecture of the Online Chess Platform.  
+The system enables users to play chess online, manage invitations, track games, and maintain player ratings.
+
+## 2. Use Case Diagram
+The use case diagram illustrates the interactions between users (players) and the system.  
+Key actors include:
+- **Player** – can register, log in, create invitations, accept invitations, make moves, and view game history.
+- **Guest** – can only view public information (if applicable).
+
+![Use Case Diagram](./images/use-case-diagram.png)
+
+*Figure 1: Use case diagram of the Online Chess Platform.*
+
+## 3. Component Diagram
+The component diagram shows the high‑level architecture of the system, its main components, and the interfaces between them.  
+Components include:
+- **Web Client** (React) – user interface.
+- **API Server** (FastAPI) – handles REST requests.
+- **Authentication Service** – manages login and OAuth.
+- **Game Engine** – validates chess rules.
+- **WebSocket Service** – real‑time updates.
+- **Database** (PostgreSQL) – persistent storage.
+- **Google OAuth** – external authentication provider.
+
+![Component Diagram](./images/component-diagram.png)
+
+*Figure 2: UML component diagram with provided/required interfaces.*
+
+## 4. Entity Relationship Diagram
+The ER diagram models the database structure.  
+Main entities:
+- **User** – stores player information and credentials.
+- **Game** – records each match, players, status, and winner.
+- **Move** – logs every move made in a game.
+- **Invitation** – manages game invitations between users.
+- **Rating** – (optional) tracks rating history over time.
+
+![ER Diagram](./images/ER-diagram.png)
+
+*Figure 3: Entity relationship diagram of the Online Chess Platform.*
