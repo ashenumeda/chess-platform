@@ -139,23 +139,44 @@ of chess after invitation acceptance.
 
 **FR-13:** The system shall enforce standard chess rules.
 
-**FR-14:** The system shall validate each move before applying it to the
+**FR-14:** The system shall validate each move before applying it to the 
 game state.
 
-**FR-14A:** The system shall display all legal moves for a selected chess
+**FR-14A:** The system shall display all legal moves for a selected chess 
 piece before the player makes a move.
 
-**FR-15:** The system shall detect check, checkmate, and draw conditions.
+**FR-15:** The system shall detect check, checkmate, and draw conditions 
+(including stalemate, threefold repetition, and insufficient material).
 
-**FR-16:** The system shall declare a winner at the end of a game.
+**FR-16:** The system shall declare a winner at the end of a game
+(or declare a draw when applicable).
+
+**FR-17:** The system shall allow a player to offer a draw to the opponent 
+during the game.
+
+**FR-18:** The system shall notify the opponent immediately when a draw is offered 
+and provide options to accept or decline.
+
+**FR-19:** If the opponent accepts the draw offer, the system shall end the game as a 
+draw and update the game record accordingly.
+
+**FR-20:** If the opponent declines the draw offer, the system shall resume the game and 
+notify the offering player of the decline.
+
+**FR-21:** The system shall allow a player to resign from the game at any time.
+
+**FR-22:** If a player resigns, the system shall immediately end the game and declare the 
+opponent as the winner.
+
+**FR-23:** The system shall record the outcome (win/loss/draw) and update player ratings accordingly.
 
 ---
 
 ### 3.5 Match History
 
-**FR-17:** The system shall store completed games.
+**FR-24:** The system shall store completed games.
 
-**FR-18:** The system shall allow users to view their past match history.
+**FR-25:** The system shall allow users to view their past match history.
 
 ---
 
