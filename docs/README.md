@@ -69,7 +69,7 @@ Sequence diagrams illustrate the flow of interactions for key use cases in the s
 *Figure 7: Sequence diagram for a player making a move during a game.*
 
 ### 5.5 Resign Game
-![Resign Game](./images/sequence-resign-game.png)
+![Resign Game](./images/sequence-resign.png)
 *Figure 8: Sequence diagram for game termination by resignation.*
 
 ### 5.6 Offer/Accept Draw
