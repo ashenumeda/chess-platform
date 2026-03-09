@@ -5,6 +5,7 @@
 - [Use Case Diagram](#2-use-case-diagram)
 - [Component Diagram](#3-component-diagram)
 - [Entity Relationship Diagram](#4-entity-relationship-diagram)
+- [Sequence Diagrams](#5-sequence-diagrams)
 
 ## 1. Overview
 This document describes the design and architecture of the Online Chess Platform.  
@@ -47,3 +48,30 @@ Main entities:
 ![ER Diagram](./images/ER-diagram.png)
 
 *Figure 3: Entity relationship diagram of the Online Chess Platform.*
+
+## 5. Sequence Diagrams
+Sequence diagrams illustrate the flow of interactions for key use cases in the system.
+
+### 5.1 User Authentication
+![Authentication Sequence](./images/sequence-auth.png)
+*Figure 4: Sequence diagram for user login and registration.*
+
+### 5.2 Create Invitation
+![Create Invitation](./images/sequence-create-invitation.png)
+*Figure 5: Sequence diagram for generating and sharing a game invitation.*
+
+### 5.3 Accept Invitation & Start Game
+![Accept Invitation](./images/sequence-accept-invitation.png)
+*Figure 6: Sequence diagram for accepting an invitation and creating a new game.*
+
+### 5.4 Make a Move
+![Make Move](./images/sequence-make-move.png)
+*Figure 7: Sequence diagram for a player making a move during a game.*
+
+### 5.5 Resign Game
+![Resign Game](./images/sequence-resign-game.png)
+*Figure 8: Sequence diagram for game termination by resignation.*
+
+### 5.6 Offer/Accept Draw
+![Offer Draw](./images/sequence-draw-agreement.png)
+*Figure 9: Sequence diagram for offering and accepting a draw.*
