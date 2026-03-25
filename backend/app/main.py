@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from app.routes import example
+from app.routes import games  # import the games router
 
 app = FastAPI(title="Chess Platform API")
 
 # Include routers
-app.include_router(example.router)
+app.include_router(games.router)
 
 @app.get("/")
 def root():
