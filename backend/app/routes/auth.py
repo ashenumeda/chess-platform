@@ -68,8 +68,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), conn=Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
-@router.get("/me")
-async def read_users_me(token: str = Depends(oauth2_scheme), conn=Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), conn=Depends(get_db)):
     # Decode token
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -88,3 +87,7 @@ async def read_users_me(token: str = Depends(oauth2_scheme), conn=Depends(get_db
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch user data: {str(e)}")
+
+@router.get("/me")
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    return current_user
