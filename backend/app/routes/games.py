@@ -6,7 +6,7 @@ from asyncpg import Connection
 
 from app.services.chess_service import ChessService
 from app.core.database import get_db
-from app.routes.auth import get_current_user
+from app.services.auth_service import get_current_user
 
 router = APIRouter(prefix="/games", tags=["games"])
 
