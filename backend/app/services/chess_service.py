@@ -86,6 +86,12 @@ class ChessService:
                     "move_number": move_number
                 }
 
+                # If ofer a draw, clear it since a move has been made
+                await db.execute(
+                    "UPDATE games SET draw_offered_by = NULL WHERE id = $1",
+                    game_id
+                )
+
                 # 6. Update game status and fen in database
                 new_status = "active"
                 if board.is_game_over():
@@ -154,3 +160,128 @@ class ChessService:
             return "fivefold repetition"
         else:
             return "draw"
+        
+    @staticmethod
+    async def resign_game(db: Connection, game_id: uuid.UUID, player_id: uuid.UUID) -> dict:
+        """Allow a player to resign from an active game. Returns game result."""
+        try:
+            async with db.transaction():
+                # 1. Get current game state
+                game = await ChessService.get_game_state(db, game_id)
+                if not game:
+                    return {"success": False, "error": "Game not found"}
+                if game["status"] != "active":
+                    return {"success": False, "error": "Game is already finished"}
+                
+                # 2. Determine winner
+                if player_id == game["white_player_id"]:
+                    winner_id = game["black_player_id"]
+                    result = "resignation - black wins"
+                elif player_id == game["black_player_id"]:
+                    winner_id = game["white_player_id"]
+                    result = "resignation - white wins"
+                else:
+                    return {"success": False, "error": "You are not a player in this game"}
+
+                # 3. Update game status
+                await db.execute(
+                    "UPDATE games SET status = $1, finished_at = CURRENT_TIMESTAMP, winner_id = $2 WHERE id = $3",
+                    "resigned", winner_id, game_id
+                )
+
+                return {"success": True, "result": result, "winner_id": winner_id}
+        except ValueError as ve:
+            return {"success": False, "error": str(ve)}
+        except Exception as e:
+            return {"success": False, "error": f"Failed to process resignation: {str(e)}"}
+        
+    @staticmethod
+    async def offer_draw(db: Connection, game_id: uuid.UUID, offering_player_id: uuid.UUID) -> dict:
+        """Allow a player to offer a draw. Returns success or error."""
+        try:
+            async with db.transaction():
+                # 1. Get current game state
+                game = await ChessService.get_game_state(db, game_id)
+                if not game:
+                    return {"success": False, "error": "Game not found"}
+                if game["status"] != "active":
+                    return {"success": False, "error": "Game is already finished"}
+                
+                # 2. Check if offering player is part of the game
+                if offering_player_id not in [game["white_player_id"], game["black_player_id"]]:
+                    return {"success": False, "error": "You are not a player in this game"}
+                
+                # 3. Check if draw offer is already pending
+                existing_offer = await db.fetchrow(
+                    "SELECT draw_offered_by FROM games WHERE id = $1", game_id  
+                )
+
+                # The `fetchrow` above actually returns a Record if there is a game row. 
+                # We need to explicitly check the value of `draw_offered_by` column.
+                if existing_offer and existing_offer["draw_offered_by"] is not None:
+                    return {"success": False, "error": "A draw offer is already pending"}
+                
+                # 4. Store the draw offer
+                await db.execute(
+                    "UPDATE games SET draw_offered_by = $1 WHERE id = $2",
+                    offering_player_id, game_id
+                )   
+
+                return {"success": True, "message": "Draw offer made"}
+        except ValueError as ve:
+            return {"success": False, "error": str(ve)}
+        except Exception as e:
+            return {"success": False, "error": f"Failed to offer draw: {str(e)}"}
+
+    @staticmethod
+    async def respond_draw(db: Connection, game_id: uuid.UUID, responding_player_id: uuid.UUID, accept: bool) -> dict:
+        """Allow a player to respond to a draw offer. Returns result."""
+        try:
+            async with db.transaction():
+                # 1. Get current game state
+                game = await ChessService.get_game_state(db, game_id)
+                if not game:
+                    return {"success": False, "error": "Game not found"}
+                if game["status"] != "active":
+                    return {"success": False, "error": "Game is already finished"}
+                
+                # 2. Check if responding player is part of the game
+                if responding_player_id not in [game["white_player_id"], game["black_player_id"]]:
+                    return {"success": False, "error": "You are not a player in this game"}
+                
+                # 3. Check if there is a pending draw offer
+                existing_offer = await db.fetchrow(
+                    "SELECT draw_offered_by FROM games WHERE id = $1", game_id  
+                )
+                if not existing_offer or existing_offer["draw_offered_by"] is None:
+                    return {"success": False, "error": "No draw offer to respond to"}
+                
+                offering_player_id = existing_offer["draw_offered_by"]
+                
+                # 4. Validate that the responding player is not the one who offered the draw
+                if responding_player_id == offering_player_id:
+                    return {"success": False, "error": "You cannot respond to your own draw offer"}
+
+                if accept:
+                    # Update game status to draw
+                    await db.execute(
+                        """
+                        UPDATE games SET status = $1, finished_at = CURRENT_TIMESTAMP,
+                                        fen = $2, draw_offered_by = NULL
+                        WHERE id = $3
+                        """,
+                        "draw", game["fen"], game_id
+                    )
+                    return {"success": True, "result": "Draw accepted"}
+                else:
+                    # Clear the draw offer
+                    await db.execute(
+                        "UPDATE games SET draw_offered_by = NULL WHERE id = $1",
+                        game_id
+                    )
+                    return {"success": True, "result": "Draw declined"}
+        except ValueError as ve:
+            return {"success": False, "error": str(ve)}
+        except Exception as e:
+            return {"success": False, "error": f"Failed to respond to draw offer: {str(e)}"}
+        

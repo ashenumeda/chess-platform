@@ -18,6 +18,9 @@ class MoveRequest(BaseModel):
     # We will also pull the player_id implicitly from the current user below instead of the request body
     move: str  # UCI format, e.g., "e2e4"
 
+class DrawResponseRequest(BaseModel):
+    accept: bool  # True to accept the draw, False to decline
+
 @router.post("/")
 async def create_game(
     request: CreateGameRequest, 
@@ -66,6 +69,46 @@ async def make_move(
     """Make a move on the given game. Must be authenticated."""
     player_id = current_user["id"]
     result = await ChessService.make_move(db, game_id, player_id, request.move)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    return result
+
+@router.post("/{game_id}/resign")
+async def resign_game(
+    game_id: uuid.UUID, 
+    db: Connection = Depends(get_db), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Resign from the game. Must be authenticated."""
+    player_id = current_user["id"]
+    result = await ChessService.resign_game(db, game_id, player_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    return result
+
+@router.post("/{game_id}/offer_draw")
+async def offer_draw(
+    game_id: uuid.UUID, 
+    db: Connection = Depends(get_db), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Offer a draw in the game. Must be authenticated."""
+    player_id = current_user["id"]
+    result = await ChessService.offer_draw(db, game_id, player_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    return result
+
+@router.post("/{game_id}/respond_draw")
+async def respond_draw(
+    game_id: uuid.UUID, 
+    request: DrawResponseRequest, 
+    db: Connection = Depends(get_db), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Respond to a draw offer in the game. Must be authenticated."""
+    player_id = current_user["id"]
+    result = await ChessService.respond_draw(db, game_id, player_id, request.accept)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
     return result

@@ -26,7 +26,8 @@ async def create_tables():
             status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'completed', 'resigned', 'draw')),
             fen TEXT,
             created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-            finished_at TIMESTAMPTZ
+            finished_at TIMESTAMPTZ,
+            draw_offered_by UUID REFERENCES users(id) DEFAULT NULL
         )
     """)
     await conn.execute("""
