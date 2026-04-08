@@ -7,6 +7,7 @@ from asyncpg import Connection
 from app.services.chess_service import ChessService
 from app.core.database import get_db
 from app.services.auth_service import get_current_user
+from app.websocket import manager
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -71,6 +72,16 @@ async def make_move(
     result = await ChessService.make_move(db, game_id, player_id, request.move)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    
+    # Broadcast the updated game state to all connected WebSocket clients for this game
+    await manager.broadcast(game_id, {
+        "type": "move_made",
+        "move": request.move,
+        "fen": result.get("fen"),
+        "is_game_over": result.get("is_game_over"),
+        "status": result.get("status"),
+    })
+
     return result
 
 @router.post("/{game_id}/resign")
@@ -84,6 +95,14 @@ async def resign_game(
     result = await ChessService.resign_game(db, game_id, player_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    
+    # Broadcast game over
+    await manager.broadcast(game_id, {
+        "type": "game_over",
+        "result": result["result"],
+        "winner_id": result.get("winner_id")
+    })
+
     return result
 
 @router.post("/{game_id}/offer_draw")
@@ -97,6 +116,13 @@ async def offer_draw(
     result = await ChessService.offer_draw(db, game_id, player_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    
+    # Broadcast the draw offer to the opponent
+    await manager.broadcast(game_id, {
+        "type": "draw_offered",
+        "by": player_id
+    })
+     
     return result
 
 @router.post("/{game_id}/respond_draw")
@@ -111,4 +137,18 @@ async def respond_draw(
     result = await ChessService.respond_draw(db, game_id, player_id, request.accept)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Unknown error"))
+    
+    # Broadcast the response to the opponent
+    if request.accept:
+        await manager.broadcast(game_id, {
+            "type": "game_over",
+            "result": "draw",
+            "winner_id": None
+        })
+
+    else:
+        await manager.broadcast(game_id, {
+            "type": "draw_declined",
+            "by": player_id
+        })  
     return result

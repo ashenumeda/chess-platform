@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.core.database import init_db, close_db
-from app.routes import games, auth, invitations  # import the games router
+from app.routes import games, auth, invitations, ws  # import the games router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,6 +15,7 @@ app = FastAPI(title="Chess Platform API", lifespan=lifespan)
 app.include_router(games.router)
 app.include_router(auth.router)
 app.include_router(invitations.router)
+app.include_router(ws.router)
 
 @app.get("/")
 def root():
